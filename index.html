@@ -19,7 +19,7 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{background:radial-gradient(1100px 680px at 12% -5%, rgba(255,255,255,.22), transparent 55%),radial-gradient(1000px 720px at 105% 110%, rgba(52,64,67,.42), transparent 55%),linear-gradient(155deg,#9fadb0 0%,#94a1a4 48%,#7c8a8d 100%);background-attachment:fixed;color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh;letter-spacing:.1px}
+  body{background:radial-gradient(980px 740px at 20% 30%, rgba(31,44,50,.36), transparent 62%),radial-gradient(1300px 900px at 76% 20%, rgba(255,255,255,.14), transparent 60%),radial-gradient(1100px 820px at 2% 118%, rgba(45,58,64,.40), transparent 58%),linear-gradient(160deg,#9fabb0 0%,#8b989d 48%,#717f85 100%);background-attachment:fixed;color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh;letter-spacing:.1px}
   a{color:inherit;text-decoration:none}
   .btn{display:inline-block;background:#f5f3ec;color:#16181a;border:1px solid rgba(22,24,26,.10);padding:15px 32px;border-radius:9px;font-weight:400;font-size:15px;letter-spacing:.3px;transition:.15s;box-shadow:0 1px 3px rgba(20,24,26,.10)}
   .btn:hover{background:#ffffff}
@@ -60,6 +60,20 @@
   .modal-head b{font-size:14px;font-weight:500}
   .modal-head button{background:var(--bg-2);border:1px solid var(--line);color:var(--muted);width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer}
   .modal iframe{border:0;width:100%;flex:1;background:#fff}
+  @media (prefers-reduced-motion: no-preference){
+    /* editorial: long, gently decelerating glide — small travel, no blur, no hard stop */
+    .reveal{opacity:0;transform:translateY(22px);transition:opacity 1.8s cubic-bezier(.16,1,.3,1),transform 1.8s cubic-bezier(.16,1,.3,1);will-change:opacity,transform}
+    .reveal.in{opacity:1;transform:none}
+    .reveal.d1{transition-delay:0s}.reveal.d2{transition-delay:.14s}.reveal.d3{transition-delay:.28s}.reveal.d4{transition-delay:.42s}.reveal.d5{transition-delay:.56s}
+    /* headline glides up from behind a mask */
+    .mask{overflow:hidden;padding-bottom:.1em}
+    .mask > span{display:inline-block;transform:translateY(120%);transition:transform 1.9s cubic-bezier(.16,1,.3,1)}
+    .mask.in > span{transform:none}
+    /* cards move together as one block; only a soft hover lift */
+    .card{transition:transform .5s cubic-bezier(.16,1,.3,1),border-color .3s}
+    .card:hover{transform:translateY(-4px)}
+  }
+.hero h2,.hero .eyebrow,.hero p,.cta-note,h2.section,p.lead{text-shadow:0 1px 2px rgba(20,30,35,.28)}
 </style>
 </head>
 <body>
@@ -73,23 +87,23 @@
 </header>
 
 <section class="hero">
-  <div class="eyebrow">QOVES Creator Program</div>
-  <h2>Apply to create for QOVES</h2>
-  <p>We partner with creators across beauty, skincare, grooming and self-optimisation. Tell us about you and share your best work — we review every application and will be in touch if you are selected.</p>
-  <div class="cta-row">
+  <div class="eyebrow reveal d1">QOVES Creator Program</div>
+  <h2 class="mask"><span>Apply to create for QOVES</span></h2>
+  <p class="reveal d2">We partner with creators across beauty, skincare, grooming and self-optimisation. Tell us about you and share your best work — we review every application and will be in touch if you are selected.</p>
+  <div class="cta-row reveal d3">
     <a class="btn" href="submit.html">Apply now</a>
   </div>
-  <div class="cta-note">Takes about 3 minutes.</div>
+  <div class="cta-note reveal d4">Takes about 3 minutes.</div>
 </section>
 
-<section class="steps">
+<section class="steps reveal">
   <div class="card"><div class="n">1</div><h3>Apply</h3><p>Share your details, platform, audience size, and examples of your previous content.</p></div>
   <div class="card"><div class="n">2</div><h3>Review</h3><p>The QOVES team reviews your profile and content to see if it is a fit.</p></div>
   <div class="card"><div class="n">3</div><h3>Onboard</h3><p>Approved creators are onboarded and briefed on paid content opportunities with QOVES.</p></div>
 </section>
 
 <section class="info">
-  <div class="info-box">
+  <div class="info-box reveal d1">
     <h4>What you'll need</h4>
     <p>Your main social handle, your audience size and niche, one or two links to previous content, and a short note on why you would be a good fit.</p>
   </div>
@@ -99,5 +113,15 @@
   QOVES Creator Program • Your application is saved securely to QOVES.
 </div>
 
+<script>
+(function(){
+  var els=document.querySelectorAll(".reveal, .mask");
+  if(!("IntersectionObserver" in window)){els.forEach(function(e){e.classList.add("in")});return;}
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target);} });
+  },{threshold:0.01, rootMargin:"0px 0px -8% 0px"});
+  els.forEach(function(e){io.observe(e)});
+})();
+</script>
 </body>
 </html>
