@@ -1,7 +1,9 @@
 /* QOVES Creator Program — application intake proxy (Netlify Function)
    POST /.netlify/functions/submit -> forwards to Airtable with a secret token.
-   ENV VARS (Netlify → Site settings):
-     AIRTABLE_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_TABLE (e.g. "Creator Applications") */
+   ENV VARS (Netlify -> Site settings):
+     AIRTABLE_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_TABLE (e.g. "Creator Applications")
+     NOTIFY_URL  (n8n webhook, e.g. https://n8n.qoves.com/webhook/creator-portal-notify)
+     NOTIFY_SECRET (x-qoves-notify-secret header value) */
 const HITS = new Map();
 const WINDOW_MS = 60 * 1000;
 const MAX_PER_WINDOW = 6;
@@ -50,7 +52,7 @@ exports.handler = async (event) => {
   fields["Application ID"] = trackingId;
   fields["Application Status"] = "New";
 
-  const { AIRTABLE_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_TABLE } = process.env;
+  const { AIRTABLE_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_TABLE, NOTIFY_URL, NOTIFY_SECRET } = process.env;
   if (!AIRTABLE_TOKEN || !AIRTABLE_BASE_ID || !AIRTABLE_TABLE) return reply(500,{ error:"Server not configured (missing Airtable env vars)." });
 
   const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE)}`;
@@ -61,6 +63,29 @@ exports.handler = async (event) => {
       body: JSON.stringify({ records:[{ fields }], typecast:true })
     });
     if (!air.ok){ const d = await air.text().catch(()=> ""); console.error("Airtable error", air.status, d); return reply(502,{ error:"Could not save to Airtable." }); }
+
+    if (NOTIFY_URL) {
+      fetch(NOTIFY_URL, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "x-qoves-notify-secret": NOTIFY_SECRET||"" },
+        body: JSON.stringify({
+          event:"application_submitted",
+          name: body.name,
+          email: body.email,
+          handle: body.handle,
+          platform: body.platform,
+          niche: body.niche,
+          audience: body.audience,
+          example1: body.example1,
+          example2: body.example2||"",
+          exampleNotes: body.exampleNotes||"",
+          rate: body.rate||"",
+          about: body.about||"",
+          applicationId: trackingId
+        })
+      }).catch(e => console.error("Notify error", e));
+    }
+
     return reply(200, { trackingId });
   } catch (e) { console.error("Proxy error", e); return reply(500,{ error:"Unexpected server error." }); }
 };
